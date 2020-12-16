@@ -1,0 +1,57 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: demoapp-insecure-backend
+  namespace: demoapp
+spec:
+  selector:
+    app: demoapp-insecure-backend
+  ports:
+    - port: 5432
+      targetPort: 5432
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: demoapp-insecure-pg
+  labels:
+    app: demoapp-insecure-backend
+spec:
+  serviceName: demoapp-insecure-backend
+  selector:
+    matchLabels:
+      app: demoapp-insecure-backend
+  template:
+    metadata:
+      labels:
+        app: demoapp-insecure-backend
+    spec:
+      securityContext:
+        fsGroup: 999
+      containers:
+      - name: demoapp-insecure-backend
+        image: {{ TEST_APP_PG_DOCKER_IMAGE }}
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 5432
+        volumeMounts:
+          - name: backend-certs
+            mountPath: "/etc/certs/"
+            readOnly: true
+        args: ["-c", "ssl=on", "-c", "ssl_cert_file=/etc/certs/server.crt", "-c", "ssl_key_file=/etc/certs/server.key"]
+        env:
+          - name: POSTGRES_USER
+            value: demoapp-user
+          - name: POSTGRES_PASSWORD
+            value: {{ DEMOAPP_DB_PASSWORD }}
+          - name: POSTGRES_DB
+            value: demoapp
+      volumes:
+        - name: backend-certs
+          secret:
+            secretName: demoapp-backend-certs
+            defaultMode: 384
+
+

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: demoapp-insecure
+  labels:
+    app: demoapp-insecure
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: demoapp-insecure
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: demoapp-insecure
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demoapp-insecure
+  name: demoapp-insecure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demoapp-insecure
+  template:
+    metadata:
+      labels:
+        app: demoapp-insecure
+    spec:
+      serviceAccountName: demoapp-insecure
+      containers:
+      - image: cyberark/demo-app
+        imagePullPolicy: Always
+        name: test-app
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /pets
+            port: http
+          initialDelaySeconds: 15
+          timeoutSeconds: 5
+        env:
+        - name: DB_USERNAME
+          value: "demoapp-user"
+        - name: DB_PASSWORD
+          value: "InsecurePwd"
+        - name: DB_URL
+          value: "postgresql://demoapp-insecure-backend.demoapp.svc.cluster.local/demoapp"
+          
+

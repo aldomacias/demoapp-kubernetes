@@ -1,0 +1,9 @@
+environment:
+  k8sSecrets: [demoapp-db-credentials]
+  conjur: 
+    account: demo
+    applianceUrl: https://conjur-follower.conjur-dev.svc.cluster.local
+    authnUrl: https://conjur-follower.conjur-dev.svc.cluster.local/authn-k8s/eks-dev
+    authnLogin: host/demoapp-secrets-provider/secrets-provider-k8s
+    sslCertificate: 
+      value: ""
